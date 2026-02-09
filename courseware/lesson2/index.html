@@ -33,6 +33,46 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             max-width: 300px;
             pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+        #instruction-panel.collapsed {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        #instruction-panel.collapsed .panel-content,
+        #instruction-panel.collapsed h3 {
+            display: none;
+        }
+        #instruction-panel.collapsed #toggle-btn {
+            position: static;
+            font-size: 1.5rem;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #555;
+            z-index: 10;
+        }
+        #toggle-btn:hover {
+            color: #000;
         }
         .success-message {
             color: #2ecc71;
@@ -73,18 +113,51 @@
         </div>
 
         <div id="instruction-panel">
+            <button id="toggle-btn" title="收起/展开指南">➖</button>
             <h3>操作指南</h3>
-            <ol>
-                <li>找到电池的<strong>正极(+)</strong>和<strong>负极(-)</strong>。</li>
-                <li>找到灯泡的两个<strong>连接点</strong>（红色小球）。</li>
-                <li><strong>按住鼠标左键</strong>从一个点拖动到另一个点来连接导线。</li>
-                <li>形成闭合回路，灯泡就会亮起来！</li>
-            </ol>
-            <div id="success-msg" class="success-message">🎉 恭喜！你成功点亮了灯泡！</div>
-            <button id="reset-btn" class="btn btn-reset">重置电路</button>
+            <div class="panel-content">
+                <ol>
+                    <li>找到电池的<strong>正极(+)</strong>和<strong>负极(-)</strong>。</li>
+                    <li>找到灯泡的两个<strong>连接点</strong>（红色小球）。</li>
+                    <li><strong>按住鼠标左键</strong>从一个点拖动到另一个点来连接导线。</li>
+                    <li>形成闭合回路，灯泡就会亮起来！</li>
+                </ol>
+                <div id="success-msg" class="success-message">🎉 恭喜！你成功点亮了灯泡！</div>
+                <button id="reset-btn" class="btn btn-reset">重置电路</button>
+            </div>
         </div>
     </div>
 
     <script type="module" src="./script.js"></script>
+    <script>
+        // Toggle Instruction Panel
+        const panel = document.getElementById('instruction-panel');
+        const toggleBtn = document.getElementById('toggle-btn');
+        let isCollapsed = false;
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isCollapsed = !isCollapsed;
+            if (isCollapsed) {
+                panel.classList.add('collapsed');
+                toggleBtn.innerText = '❓'; // Question mark icon when collapsed
+                toggleBtn.title = '展开操作指南';
+            } else {
+                panel.classList.remove('collapsed');
+                toggleBtn.innerText = '➖';
+                toggleBtn.title = '收起操作指南';
+            }
+        });
+
+        // Click collapsed panel to expand
+        panel.addEventListener('click', () => {
+            if (isCollapsed) {
+                isCollapsed = false;
+                panel.classList.remove('collapsed');
+                toggleBtn.innerText = '➖';
+                toggleBtn.title = '收起操作指南';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -161,7 +161,9 @@ function createBattery() {
 
     // Connection Point Positive
     const cpPosGroup = createConnectionPoint({ type: 'point', parent: 'battery', pole: 'pos' });
-    cpPosGroup.position.set(2.8, 0, 0); 
+    // Battery is rotated -90 deg Z. The local Y axis points to World X+.
+    // So we move along Y axis to place it at the tip.
+    cpPosGroup.position.set(0, 2.8, 0); 
     
     // Add text label for "+"
     const canvasPos = document.createElement('canvas');
@@ -172,12 +174,10 @@ function createBattery() {
     ctxPos.font = 'bold 48px Arial';
     ctxPos.fillText('+', 15, 50);
     const texPos = new THREE.CanvasTexture(canvasPos);
-    const labelPos = new THREE.Sprite(new THREE.SpriteMaterial({ map: texPos, depthTest: false })); // Disable depth test to see through? No, just keep it simple.
-    // Actually, SpriteMaterial is transparent by default if texture has alpha.
-    // Let's ensure connection point is interactive. 
-    // The core sphere is added to connectionPoints in createConnectionPoint.
-    // The label is just visual.
-    labelPos.position.set(0, 0.5, 0); // Float above point
+    const labelPos = new THREE.Sprite(new THREE.SpriteMaterial({ map: texPos, depthTest: false })); 
+    // To float "Up" (World Y+), we need to move in Local -X direction
+    // because Local X+ points to World Y- (due to -90 Z rotation)
+    labelPos.position.set(-0.6, 0, 0); 
     labelPos.scale.set(0.5, 0.5, 0.5);
     cpPosGroup.add(labelPos);
     
@@ -185,7 +185,8 @@ function createBattery() {
 
     // Connection Point Negative
     const cpNegGroup = createConnectionPoint({ type: 'point', parent: 'battery', pole: 'neg' });
-    cpNegGroup.position.set(-0.2, 0, 0);
+    // Local Y negative is the other end
+    cpNegGroup.position.set(0, -0.2, 0);
     
     // Add text label for "-"
     const canvasNeg = document.createElement('canvas');
@@ -195,8 +196,9 @@ function createBattery() {
     ctxNeg.font = 'bold 48px Arial';
     ctxNeg.fillText('-', 20, 45);
     const texNeg = new THREE.CanvasTexture(canvasNeg);
-    const labelNeg = new THREE.Sprite(new THREE.SpriteMaterial({ map: texNeg }));
-    labelNeg.position.set(0, 0.5, 0); // Float above point
+    const labelNeg = new THREE.Sprite(new THREE.SpriteMaterial({ map: texNeg, depthTest: false }));
+    // Float Up (World Y+) -> Local -X
+    labelNeg.position.set(-0.6, 0, 0); 
     labelNeg.scale.set(0.5, 0.5, 0.5);
     cpNegGroup.add(labelNeg);
 
