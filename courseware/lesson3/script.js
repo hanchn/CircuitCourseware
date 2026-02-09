@@ -298,15 +298,16 @@ function createSwitch() {
 // Add objects
 const battery = createBattery();
 battery.rotation.z = -Math.PI / 2;
-battery.position.set(-4, 0.6, 0);
+battery.position.set(-3, 0.6, -2);
 scene.add(battery);
 
 const bulb = createBulb();
-bulb.position.set(4, 0, 0);
+bulb.position.set(3, 0, -2);
 scene.add(bulb);
 
 const switchObj = createSwitch();
-switchObj.position.set(0, 0, 2); // Place switch in front
+switchObj.position.set(0, 0, 3); // Place switch in front
+switchObj.rotation.y = Math.PI / 2; // Rotate 90 degrees
 scene.add(switchObj);
 
 // --- Interaction ---
@@ -320,16 +321,53 @@ function getIntersects(event, objects) {
     return raycaster.intersectObjects(objects, false);
 }
 
+function isPointOccupied(userData) {
+    return wires.some(w => {
+        // Check start
+        const startMatch = (w.start.parent === userData.parent) && 
+                           (w.start.id === userData.id) && 
+                           (w.start.pole === userData.pole);
+        // Check end
+        const endMatch = (w.end.parent === userData.parent) && 
+                         (w.end.id === userData.id) && 
+                         (w.end.pole === userData.pole);
+        return startMatch || endMatch;
+    });
+}
+
 // Hover
 window.addEventListener('mousemove', (e) => {
     if (isDrawing) {
         let targetPos = new THREE.Vector3();
-        const hit = raycaster.intersectObjects([floor, ...connectionPoints], true)[0];
-        if (hit) {
-            targetPos.copy(hit.point);
-        } else {
-            raycaster.ray.at(5, targetPos);
+        // Allow snapping to valid end points while drawing
+        const intersects = getIntersects(e, connectionPoints);
+        let snapped = false;
+        
+        if (intersects.length > 0) {
+            const point = intersects[0].object;
+            // Only snap if not occupied and not the start point
+            if (!isPointOccupied(point.userData) && point !== startPoint) {
+                targetPos.copy(point.getWorldPosition(new THREE.Vector3()));
+                snapped = true;
+                point.material.color.set(0x00ff00); // Highlight potential target
+            }
         }
+
+        if (!snapped) {
+            // Reset colors of points if not snapped (cleanup previous frame highlights)
+             connectionPoints.forEach(p => {
+                 if (p !== startPoint) p.material.color.set(0xff3300);
+             });
+             
+            // Normal raycast
+            const hit = raycaster.intersectObjects([floor, ...connectionPoints], true)[0];
+            if (hit) {
+                targetPos.copy(hit.point);
+            } else {
+                raycaster.ray.at(5, targetPos);
+            }
+        }
+
         if (currentLine) {
             const startPos = startPoint.getWorldPosition(new THREE.Vector3());
             updateWireMesh(currentLine, startPos, targetPos, currentLine.userData.bendFactor);
@@ -342,9 +380,18 @@ window.addEventListener('mousemove', (e) => {
     document.body.style.cursor = 'default';
     
     if (intersects.length > 0) {
-        intersects[0].object.material.color.set(0x00ff00);
-        document.body.style.cursor = 'crosshair';
-        controls.enabled = false;
+        const point = intersects[0].object;
+        if (!isPointOccupied(point.userData)) {
+            point.material.color.set(0x00ff00);
+            document.body.style.cursor = 'crosshair';
+            controls.enabled = false;
+        } else {
+            // Occupied: Show visual feedback (e.g. grey)
+            point.material.color.set(0x888888); 
+            document.body.style.cursor = 'not-allowed';
+            // Allow controls so user isn't stuck
+            controls.enabled = true; 
+        }
     } else {
         controls.enabled = true;
     }
@@ -354,8 +401,15 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mousedown', (e) => {
     const intersects = getIntersects(e, connectionPoints);
     if (intersects.length > 0) {
+        const point = intersects[0].object;
+        
+        // Check if occupied
+        if (isPointOccupied(point.userData)) {
+            return; // Ignore click
+        }
+
         isDrawing = true;
-        startPoint = intersects[0].object;
+        startPoint = point;
         controls.enabled = false;
 
         const startPos = startPoint.getWorldPosition(new THREE.Vector3());
@@ -393,6 +447,11 @@ window.addEventListener('mouseup', (e) => {
 
         if (intersects.length > 0) {
             endPoint = intersects[0].object;
+        }
+
+        // Check if endPoint is occupied
+        if (endPoint && isPointOccupied(endPoint.userData)) {
+             endPoint = null; // Treat as invalid
         }
 
         if (endPoint && endPoint !== startPoint) {
@@ -570,7 +629,7 @@ function turnOnBulb() {
     if (!scene.getObjectByName('bulbLight')) {
         const light = new THREE.PointLight(0xffaa00, 5, 10);
         light.name = 'bulbLight';
-        light.position.set(4, 2, 0);
+        light.position.set(3, 2, -2);
         scene.add(light);
     }
 }
