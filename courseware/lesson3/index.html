@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3课：带开关的电路 - 3D趣味电路</title>
+    <link rel="stylesheet" href="../lesson1/style.css">
+    <style>
+        #nav-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+            pointer-events: auto;
+        }
+        #nav-btn:hover { background: #34495e; }
+
+        #instruction-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 300px;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+        #instruction-panel.collapsed {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        #instruction-panel.collapsed .panel-content,
+        #instruction-panel.collapsed h3 {
+            display: none;
+        }
+        #instruction-panel.collapsed #toggle-btn {
+            position: static;
+            font-size: 1.5rem;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #555;
+            z-index: 10;
+        }
+        #toggle-btn:hover {
+            color: #000;
+        }
+        .success-message {
+            color: #2ecc71;
+            font-weight: bold;
+            display: none;
+            margin-top: 10px;
+            font-size: 1.2rem;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-reset {
+            background: #e74c3c;
+        }
+        .btn-reset:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" id="nav-btn">← 返回主页</a>
+    <div id="canvas-container"></div>
+    
+    <div id="ui-overlay">
+        <div class="header">
+            <h1>第3课：带开关的电路</h1>
+            <p>任务：连接电路，并使用开关控制灯泡的亮灭！💡</p>
+        </div>
+
+        <div id="instruction-panel">
+            <button id="toggle-btn" title="收起/展开指南">➖</button>
+            <h3>操作指南</h3>
+            <div class="panel-content">
+                <ol>
+                    <li>将<strong>电池</strong>、<strong>开关</strong>和<strong>灯泡</strong>连接起来。</li>
+                    <li>从一个元件的连接点（红色小球）拖动到另一个元件的连接点。</li>
+                    <li>点击<strong>开关</strong>来闭合或断开电路。</li>
+                    <li>当电路闭合且开关闭合时，灯泡就会亮起来！</li>
+                </ol>
+                <div id="success-msg" class="success-message">🎉 恭喜！你学会了使用开关！</div>
+                <button id="reset-btn" class="btn btn-reset">重置电路</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./script.js"></script>
+    <script>
+        // Toggle Instruction Panel
+        const panel = document.getElementById('instruction-panel');
+        const toggleBtn = document.getElementById('toggle-btn');
+        let isCollapsed = false;
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isCollapsed = !isCollapsed;
+            if (isCollapsed) {
+                panel.classList.add('collapsed');
+                toggleBtn.innerText = '❓'; // Question mark icon when collapsed
+                toggleBtn.title = '展开操作指南';
+            } else {
+                panel.classList.remove('collapsed');
+                toggleBtn.innerText = '➖';
+                toggleBtn.title = '收起操作指南';
+            }
+        });
+
+        // Click collapsed panel to expand
+        panel.addEventListener('click', () => {
+            if (isCollapsed) {
+                isCollapsed = false;
+                panel.classList.remove('collapsed');
+                toggleBtn.innerText = '➖';
+                toggleBtn.title = '收起操作指南';
+            }
+        });
+    </script>
+</body>
+</html>
