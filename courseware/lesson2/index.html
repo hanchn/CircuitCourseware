@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第2课：点亮第一盏灯 - 3D趣味电路</title>
+    <link rel="stylesheet" href="../lesson1/style.css">
+    <style>
+        /* Add specific styles for lesson 2 if needed */
+        #instruction-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 300px;
+            pointer-events: auto;
+        }
+        .success-message {
+            color: #2ecc71;
+            font-weight: bold;
+            display: none;
+            margin-top: 10px;
+            font-size: 1.2rem;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-reset {
+            background: #e74c3c;
+        }
+        .btn-reset:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="ui-overlay">
+        <div class="header">
+            <h1>第2课：点亮第一盏灯</h1>
+            <p>任务：用导线把电池和灯泡连接起来，让灯泡发光！💡</p>
+        </div>
+
+        <div id="instruction-panel">
+            <h3>操作指南</h3>
+            <ol>
+                <li>找到电池的<strong>正极(+)</strong>和<strong>负极(-)</strong>。</li>
+                <li>找到灯泡的两个<strong>连接点</strong>（红色小球）。</li>
+                <li><strong>按住鼠标左键</strong>从一个点拖动到另一个点来连接导线。</li>
+                <li>形成闭合回路，灯泡就会亮起来！</li>
+            </ol>
+            <div id="success-msg" class="success-message">🎉 恭喜！你成功点亮了灯泡！</div>
+            <button id="reset-btn" class="btn btn-reset">重置电路</button>
+        </div>
+    </div>
+
+    <script type="module" src="./script.js"></script>
+</body>
+</html>
