@@ -7,7 +7,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf0f8ff);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 15, 18); // Zoom out to see both
+camera.position.set(0, 18, 22); // Zoom out to see both
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -19,7 +19,7 @@ const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true;
 orbitControls.maxPolarAngle = Math.PI / 2.2;
 orbitControls.minDistance = 5;
-orbitControls.maxDistance = 40;
+orbitControls.maxDistance = 50;
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -112,164 +112,97 @@ function createFlatLabel(text, color) {
 
 // --- Component Creators ---
 
-function createBatteryBox(circuitId, type = 'double') {
+function createBatteryBox(circuitId) {
     const group = new THREE.Group();
     group.name = 'batteryBox';
     
     // Common Dimensions
     const boxWidth = 3.6;
-    const slotDepth = 1.6;
     
-    if (type === 'single') {
-        // --- Single Battery Box ---
-        const caseGeo = new THREE.BoxGeometry(boxWidth, 0.8, 2.2); 
-        const caseMat = new THREE.MeshStandardMaterial({ color: 0x222222 }); 
-        const base = new THREE.Mesh(caseGeo, caseMat);
-        base.position.y = 0.4;
-        base.castShadow = true;
-        group.add(base);
-        
-        const slotGeo = new THREE.BoxGeometry(3.3, 0.5, slotDepth);
-        const slotMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-        const slot = new THREE.Mesh(slotGeo, slotMat);
-        slot.position.set(0, 0.6, 0); // Centered
-        group.add(slot);
-        
-        // Slot: Left(+), Right(-)
-        const plate = createPlate();
-        plate.position.set(-1.6, 0.6, 0);
-        group.add(plate);
-        
-        const spring = createSpring();
-        spring.rotation.y = Math.PI; 
-        spring.position.set(1.6, 0.6, 0);
-        group.add(spring);
-        
-        const lPlus = createFlatLabel('+', '#555555');
-        lPlus.position.set(-1.0, 0.36, 0);
-        group.add(lPlus);
-        
-        const lNeg = createFlatLabel('-', '#555555');
-        lNeg.position.set(1.0, 0.36, 0);
-        group.add(lNeg);
-        
-        // Terminals
-        // Pos (Red) - Left Side
-        const termBasePos = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 2.2), new THREE.MeshStandardMaterial({color: 0x333333}));
-        termBasePos.position.set(-1.9, 0.4, 0);
-        group.add(termBasePos);
+    // --- Double Battery Box (Series) ---
+    const caseGeo = new THREE.BoxGeometry(boxWidth, 0.8, 4.0); 
+    const caseMat = new THREE.MeshStandardMaterial({ color: 0x222222 }); 
+    const base = new THREE.Mesh(caseGeo, caseMat);
+    base.position.y = 0.4;
+    base.castShadow = true;
+    group.add(base);
+    
+    const slotGeo = new THREE.BoxGeometry(3.3, 0.5, 1.6);
+    const slotMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    
+    const slot1 = new THREE.Mesh(slotGeo, slotMat);
+    slot1.position.set(0, 0.6, -1.0);
+    group.add(slot1);
+    
+    const slot2 = new THREE.Mesh(slotGeo, slotMat);
+    slot2.position.set(0, 0.6, 1.0);
+    group.add(slot2);
+    
+    // Slot 1 (Back): Left(+), Right(-)
+    const plate1 = createPlate();
+    plate1.position.set(-1.6, 0.6, -1.0);
+    group.add(plate1);
+    
+    const spring1 = createSpring();
+    spring1.rotation.y = Math.PI; 
+    spring1.position.set(1.6, 0.6, -1.0);
+    group.add(spring1);
+    
+    const l1Plus = createFlatLabel('+', '#555555');
+    l1Plus.position.set(-1.0, 0.36, -1.0); 
+    group.add(l1Plus);
+    
+    const l1Neg = createFlatLabel('-', '#555555');
+    l1Neg.position.set(1.0, 0.36, -1.0);
+    group.add(l1Neg);
 
-        const termPos = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3), new THREE.MeshStandardMaterial({color: 0xff0000}));
-        termPos.position.set(-1.9, 0.7, 0.5); 
-        group.add(termPos);
-        
-        // Neg (Black) - Right Side
-        const termBaseNeg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 2.2), new THREE.MeshStandardMaterial({color: 0x333333}));
-        termBaseNeg.position.set(1.9, 0.4, 0);
-        group.add(termBaseNeg);
+    // Slot 2 (Front): Left(-), Right(+)
+    const spring2 = createSpring();
+    spring2.position.set(-1.6, 0.6, 1.0);
+    group.add(spring2);
+    
+    const plate2 = createPlate();
+    plate2.position.set(1.6, 0.6, 1.0);
+    group.add(plate2);
+    
+    const l2Neg = createFlatLabel('-', '#555555');
+    l2Neg.position.set(-1.0, 0.36, 1.0);
+    group.add(l2Neg);
+    
+    const l2Plus = createFlatLabel('+', '#555555');
+    l2Plus.position.set(1.0, 0.36, 1.0);
+    group.add(l2Plus);
 
-        const termNeg = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3), new THREE.MeshStandardMaterial({color: 0x000000}));
-        termNeg.position.set(1.9, 0.7, -0.5); 
-        group.add(termNeg);
-        
-        group.userData = {
-            circuitId: circuitId,
-            type: 'single',
-            slots: [
-                { id: 1, pos: new THREE.Vector3(0, 0.6, 0), occupied: false, expectedDir: new THREE.Vector3(-1, 0, 0) }
-            ],
-            terminals: {
-                pos: new THREE.Vector3(-1.9, 0.7, 0.5),
-                neg: new THREE.Vector3(1.9, 0.7, -0.5)
-            }
-        };
-        
-    } else {
-        // --- Double Battery Box (Series) ---
-        const caseGeo = new THREE.BoxGeometry(boxWidth, 0.8, 4.0); 
-        const caseMat = new THREE.MeshStandardMaterial({ color: 0x222222 }); 
-        const base = new THREE.Mesh(caseGeo, caseMat);
-        base.position.y = 0.4;
-        base.castShadow = true;
-        group.add(base);
-        
-        const slotGeo = new THREE.BoxGeometry(3.3, 0.5, 1.6);
-        const slotMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-        
-        const slot1 = new THREE.Mesh(slotGeo, slotMat);
-        slot1.position.set(0, 0.6, -1.0);
-        group.add(slot1);
-        
-        const slot2 = new THREE.Mesh(slotGeo, slotMat);
-        slot2.position.set(0, 0.6, 1.0);
-        group.add(slot2);
-        
-        // Slot 1 (Back): Left(+), Right(-)
-        const plate1 = createPlate();
-        plate1.position.set(-1.6, 0.6, -1.0);
-        group.add(plate1);
-        
-        const spring1 = createSpring();
-        spring1.rotation.y = Math.PI; 
-        spring1.position.set(1.6, 0.6, -1.0);
-        group.add(spring1);
-        
-        const l1Plus = createFlatLabel('+', '#555555');
-        l1Plus.position.set(-1.0, 0.36, -1.0); 
-        group.add(l1Plus);
-        
-        const l1Neg = createFlatLabel('-', '#555555');
-        l1Neg.position.set(1.0, 0.36, -1.0);
-        group.add(l1Neg);
+    // Series Bar (Left side)
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.05, 2.2), metalMat);
+    bar.position.set(-1.75, 0.6, 0); 
+    group.add(bar);
+    
+    // Terminals (Right Side)
+    const termBase = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 2.2), new THREE.MeshStandardMaterial({color: 0x333333}));
+    termBase.position.set(1.9, 0.4, 0);
+    group.add(termBase);
 
-        // Slot 2 (Front): Left(-), Right(+)
-        const spring2 = createSpring();
-        spring2.position.set(-1.6, 0.6, 1.0);
-        group.add(spring2);
-        
-        const plate2 = createPlate();
-        plate2.position.set(1.6, 0.6, 1.0);
-        group.add(plate2);
-        
-        const l2Neg = createFlatLabel('-', '#555555');
-        l2Neg.position.set(-1.0, 0.36, 1.0);
-        group.add(l2Neg);
-        
-        const l2Plus = createFlatLabel('+', '#555555');
-        l2Plus.position.set(1.0, 0.36, 1.0);
-        group.add(l2Plus);
+    const termPos = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3), new THREE.MeshStandardMaterial({color: 0xff0000}));
+    termPos.position.set(1.9, 0.7, 1.0); 
+    group.add(termPos);
+    
+    const termNeg = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3), new THREE.MeshStandardMaterial({color: 0x000000}));
+    termNeg.position.set(1.9, 0.7, -1.0); 
+    group.add(termNeg);
 
-        // Series Bar (Left side)
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.05, 2.2), metalMat);
-        bar.position.set(-1.75, 0.6, 0); 
-        group.add(bar);
-        
-        // Terminals (Right Side)
-        const termBase = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 2.2), new THREE.MeshStandardMaterial({color: 0x333333}));
-        termBase.position.set(1.9, 0.4, 0);
-        group.add(termBase);
-
-        const termPos = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3), new THREE.MeshStandardMaterial({color: 0xff0000}));
-        termPos.position.set(1.9, 0.7, 1.0); 
-        group.add(termPos);
-        
-        const termNeg = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.3), new THREE.MeshStandardMaterial({color: 0x000000}));
-        termNeg.position.set(1.9, 0.7, -1.0); 
-        group.add(termNeg);
-
-        group.userData = {
-            circuitId: circuitId,
-            type: 'double',
-            slots: [
-                { id: 1, pos: new THREE.Vector3(0, 0.6, -1.0), occupied: false, expectedDir: new THREE.Vector3(-1, 0, 0) }, 
-                { id: 2, pos: new THREE.Vector3(0, 0.6, 1.0), occupied: false, expectedDir: new THREE.Vector3(1, 0, 0) }
-            ],
-            terminals: {
-                pos: new THREE.Vector3(1.9, 0.7, 1.0),
-                neg: new THREE.Vector3(1.9, 0.7, -1.0)
-            }
-        };
-    }
+    group.userData = {
+        circuitId: circuitId,
+        type: 'double',
+        slots: [
+            { id: 1, pos: new THREE.Vector3(0, 0.6, -1.0), occupied: false, expectedDir: new THREE.Vector3(-1, 0, 0) }, 
+            { id: 2, pos: new THREE.Vector3(0, 0.6, 1.0), occupied: false, expectedDir: new THREE.Vector3(1, 0, 0) }
+        ],
+        terminals: {
+            pos: new THREE.Vector3(1.9, 0.7, 1.0),
+            neg: new THREE.Vector3(1.9, 0.7, -1.0)
+        }
+    };
 
     return group;
 }
@@ -330,9 +263,9 @@ function createBattery(id) {
     return group;
 }
 
-function createBulb(circuitId) {
+function createBulb(circuitId, suffix) {
     const group = new THREE.Group();
-    group.name = 'bulb';
+    group.name = 'bulb_' + suffix;
     
     const bulbMaterial = new THREE.MeshPhysicalMaterial({ 
         color: 0xffffff, 
@@ -454,18 +387,14 @@ function createSwitch(circuitId) {
 }
 
 // --- Circuit Builder ---
-function initCircuit(offsetX, id, type = 'double') {
+function initCircuit(offsetX, id, bulbMode) {
     const group = new THREE.Group();
     group.position.set(offsetX, 0, 0);
     scene.add(group);
 
-    const box = createBatteryBox(id, type);
+    const box = createBatteryBox(id);
     box.position.set(-3, 0, 0);
     group.add(box);
-
-    const bulb = createBulb(id);
-    bulb.position.set(3, 0, 0);
-    group.add(bulb);
 
     const sw = createSwitch(id);
     sw.position.set(0, 0, 4);
@@ -473,29 +402,27 @@ function initCircuit(offsetX, id, type = 'double') {
     group.add(sw);
 
     const batteryList = [];
+    const b1 = createBattery(id * 10 + 1);
     
-    // Batteries
-    if (type === 'single') {
-        const b1 = createBattery(id * 10 + 1);
-        b1.position.set(0, 0.5, 6.5); // Center
-        group.add(b1);
-        allBatteries.push(b1);
-        batteryList.push(b1);
-    } else {
-        const b1 = createBattery(id * 10 + 1);
-        b1.position.set(-2, 0.5, 6.5);
-        group.add(b1);
-        allBatteries.push(b1);
-        batteryList.push(b1);
+    // Adjust initial battery positions to avoid overlapping with wires
+    // Series (Left): Default
+    // Parallel (Right): Move further back
+    const battZ = bulbMode === 'parallel' ? 9.5 : 6.5;
+    
+    b1.position.set(-2, 0.5, battZ);
+    group.add(b1);
+    batteryList.push(b1);
+    allBatteries.push(b1);
 
-        const b2 = createBattery(id * 10 + 2);
-        b2.position.set(2, 0.5, 6.5);
-        group.add(b2);
-        allBatteries.push(b2);
-        batteryList.push(b2);
-    }
+    const b2 = createBattery(id * 10 + 2);
+    b2.position.set(2, 0.5, battZ);
+    group.add(b2);
+    batteryList.push(b2);
+    allBatteries.push(b2);
 
-    // Wires (Relative to Group)
+    const bulbs = [];
+
+    // Helper for world pos in group
     function getPosInGroup(obj, localVec) {
         const v = localVec.clone();
         v.applyQuaternion(obj.quaternion);
@@ -503,54 +430,136 @@ function initCircuit(offsetX, id, type = 'double') {
         return v;
     }
 
-    // 1. Box(+) to Switch(Left)
-    const p1 = getPosInGroup(box, box.userData.terminals.pos);
-    const p2 = getPosInGroup(sw, sw.userData.terminals.front);
-    
-    const cp1 = p1.clone().add(new THREE.Vector3(0, 0, 1)); 
-    const cp2 = p2.clone().add(new THREE.Vector3(-1, 0, 0)); 
-    
-    const w1 = updateWireMesh(p1, [cp1, cp2], p2);
-    group.add(w1);
+    if (bulbMode === 'series') {
+        // --- Series Bulbs ---
+        const bulb1 = createBulb(id, '1');
+        bulb1.position.set(2, 0, 0);
+        group.add(bulb1);
+        bulbs.push(bulb1);
 
-    // 2. Switch(Right) to Bulb(Left)
-    const p3 = getPosInGroup(sw, sw.userData.terminals.rear);
-    const p4 = getPosInGroup(bulb, bulb.userData.terminals.t2);
-    
-    const cp3 = p3.clone().add(new THREE.Vector3(1, 0, 0));
-    const cp4 = p4.clone().add(new THREE.Vector3(0, 0, 1));
-    
-    const w2 = updateWireMesh(p3, [cp3, cp4], p4);
-    group.add(w2);
+        const bulb2 = createBulb(id, '2');
+        bulb2.position.set(4, 0, 0);
+        group.add(bulb2);
+        bulbs.push(bulb2);
 
-    // 3. Bulb(Right) to Box(-)
-    const p5 = getPosInGroup(bulb, bulb.userData.terminals.t1);
-    const p6 = getPosInGroup(box, box.userData.terminals.neg);
-    
-    const cp5 = p5.clone().add(new THREE.Vector3(0, 0, -1));
-    const cp6 = new THREE.Vector3(3, 0.1, -2); 
-    const cp7 = new THREE.Vector3(0, 0.1, -2); 
-    const cp8 = p6.clone().add(new THREE.Vector3(1, 0, -1)); 
-    
-    const w3 = updateWireMesh(p5, [cp5, cp6, cp7, cp8], p6);
-    group.add(w3);
+        // Wiring:
+        // 1. Box(+) -> Switch(Front)
+        const p1 = getPosInGroup(box, box.userData.terminals.pos);
+        const p2 = getPosInGroup(sw, sw.userData.terminals.front);
+        const cp1 = p1.clone().add(new THREE.Vector3(0, 0, 1)); 
+        const cp2 = p2.clone().add(new THREE.Vector3(-1, 0, 0)); 
+        group.add(updateWireMesh(p1, [cp1, cp2], p2));
+
+        // 2. Switch(Rear) -> Bulb1(Left)
+        const p3 = getPosInGroup(sw, sw.userData.terminals.rear);
+        const p4 = getPosInGroup(bulb1, bulb1.userData.terminals.t2);
+        const cp3 = p3.clone().add(new THREE.Vector3(1, 0, 0));
+        const cp4 = p4.clone().add(new THREE.Vector3(0, 0, 1));
+        group.add(updateWireMesh(p3, [cp3, cp4], p4));
+
+        // 3. Bulb1(Right) -> Bulb2(Left)
+        const p5 = getPosInGroup(bulb1, bulb1.userData.terminals.t1);
+        const p6 = getPosInGroup(bulb2, bulb2.userData.terminals.t2);
+        const cp5 = p5.clone().add(new THREE.Vector3(0, 0, -0.5));
+        const cp6 = p6.clone().add(new THREE.Vector3(0, 0, 0.5));
+        group.add(updateWireMesh(p5, [cp5, cp6], p6));
+
+        // 4. Bulb2(Right) -> Box(-)
+        const p7 = getPosInGroup(bulb2, bulb2.userData.terminals.t1);
+        const p8 = getPosInGroup(box, box.userData.terminals.neg);
+        const cp7 = p7.clone().add(new THREE.Vector3(0, 0, -1));
+        const cp8 = new THREE.Vector3(4.5, 0.1, -2);
+        const cp9 = new THREE.Vector3(0, 0.1, -2);
+        const cp10 = p8.clone().add(new THREE.Vector3(1, 0, -1));
+        group.add(updateWireMesh(p7, [cp7, cp8, cp9, cp10], p8));
+
+    } else {
+        // --- Parallel Bulbs ---
+        // Layout: Switch is at z=4. We center bulbs around z=4 line.
+        const zCenter = 4;
+        const zSpacing = 3;
+        
+        // Move bulbs further right (x=5 instead of x=3) to create more space from switch
+        const bulbX = 5;
+        const splitX = 2.5; // Split bus moved from 1.5 to 2.5
+        const mergeX = 7.0; // Merge bus moved from 4.5 to 7.0
+
+        const bulb1 = createBulb(id, '1');
+        bulb1.position.set(bulbX, 0, zCenter - zSpacing); 
+        group.add(bulb1);
+        bulbs.push(bulb1);
+
+        const bulb2 = createBulb(id, '2');
+        bulb2.position.set(bulbX, 0, zCenter + zSpacing); 
+        group.add(bulb2);
+        bulbs.push(bulb2);
+
+        // Wiring - Rectangular Style
+        // 1. Box(+) -> Switch(Front)
+        const p1 = getPosInGroup(box, box.userData.terminals.pos);
+        const p2 = getPosInGroup(sw, sw.userData.terminals.front);
+        const cp1 = p1.clone().add(new THREE.Vector3(0, 0, 1)); 
+        const cp2 = p2.clone().add(new THREE.Vector3(-1, 0, 0)); 
+        group.add(updateWireMesh(p1, [cp1, cp2], p2));
+
+        // 2. Switch(Rear) -> Split Vertical Bus
+        const pSwitchOut = getPosInGroup(sw, sw.userData.terminals.rear); // ~ (1.2, 0, 4)
+        const splitNodeCenter = new THREE.Vector3(splitX, 0.1, zCenter);
+        
+        group.add(updateWireMesh(pSwitchOut, [], splitNodeCenter));
+
+        // 3. Split Bus -> Bulb 1 (Back)
+        const splitNode1 = new THREE.Vector3(splitX, 0.1, zCenter - zSpacing);
+        const corner1 = new THREE.Vector3(bulbX - 0.4, 0.1, zCenter - zSpacing);
+        const pB1L = getPosInGroup(bulb1, bulb1.userData.terminals.t2);
+        
+        group.add(updateWireMesh(splitNodeCenter, [splitNode1, corner1], pB1L));
+
+        // 4. Split Bus -> Bulb 2 (Front)
+        const splitNode2 = new THREE.Vector3(splitX, 0.1, zCenter + zSpacing);
+        const corner2 = new THREE.Vector3(bulbX - 0.4, 0.1, zCenter + zSpacing);
+        const pB2L = getPosInGroup(bulb2, bulb2.userData.terminals.t2);
+        
+        group.add(updateWireMesh(splitNodeCenter, [splitNode2, corner2], pB2L));
+
+        // 5. Bulb 1 (Right) -> Merge Bus
+        const pB1R = getPosInGroup(bulb1, bulb1.userData.terminals.t1);
+        const corner3 = new THREE.Vector3(mergeX, 0.1, zCenter - zSpacing);
+        const mergeNodeCenter = new THREE.Vector3(mergeX, 0.1, zCenter);
+        
+        group.add(updateWireMesh(pB1R, [corner3], mergeNodeCenter));
+
+        // 6. Bulb 2 (Right) -> Merge Bus
+        const pB2R = getPosInGroup(bulb2, bulb2.userData.terminals.t1);
+        const corner4 = new THREE.Vector3(mergeX, 0.1, zCenter + zSpacing);
+        
+        group.add(updateWireMesh(pB2R, [corner4], mergeNodeCenter));
+
+        // 7. Merge Bus -> Box(-)
+        const pBoxNeg = getPosInGroup(box, box.userData.terminals.neg);
+        const corner5 = new THREE.Vector3(mergeX, 0.1, -2);
+        const corner6 = new THREE.Vector3(0, 0.1, -2); // Go behind everything
+        const cpEnd = pBoxNeg.clone().add(new THREE.Vector3(1, 0, -1));
+        
+        group.add(updateWireMesh(mergeNodeCenter, [corner5, corner6, cpEnd], pBoxNeg));
+    }
 
     // Store circuit data
     circuits.push({
         id: id,
-        type: type,
+        bulbMode: bulbMode,
         group: group,
         box: box,
         switch: sw,
-        bulb: bulb,
+        bulbs: bulbs,
         batteries: batteryList,
         isSwitchClosed: false
     });
 }
 
 // Create Two Circuits
-initCircuit(-6, 0, 'single'); // Left Circuit (Single)
-initCircuit(6, 1, 'double');  // Right Circuit (Double)
+initCircuit(-6, 0, 'series'); // Left Circuit (Series)
+initCircuit(6, 1, 'parallel');  // Right Circuit (Parallel)
 
 
 // --- Interaction ---
@@ -754,55 +763,66 @@ function checkCircuit(circuit) {
     }
     
     if (allValid && circuit.isSwitchClosed) {
-        turnOnBulb(circuit);
+        turnOnBulbs(circuit);
     } else {
-        turnOffBulb(circuit);
+        turnOffBulbs(circuit);
     }
     
-    const anyOn = circuits.some(c => c.isBulbOn);
+    const anyOn = circuits.some(c => c.isBulbsOn);
     const msg = document.getElementById('success-msg');
     if (msg) msg.style.display = anyOn ? 'block' : 'none';
 }
 
-function turnOnBulb(circuit) {
-    circuit.isBulbOn = true;
-    const { bulb, filament } = circuit.bulb.userData.materials;
+function turnOnBulbs(circuit) {
+    circuit.isBulbsOn = true;
     
-    // Adjust brightness and color based on circuit type
-    const isSingle = circuit.type === 'single';
-    const intensity = isSingle ? 0.5 : 1.5; 
-    const bulbEmissive = isSingle ? 0xff6600 : 0xffff00; // Orange for single, Yellow for double
-    const filColor = isSingle ? 0xff8800 : 0xffaa00;
+    // Logic:
+    // Parallel: Full Voltage (3V) -> Very Bright
+    // Series: Half Voltage (1.5V) -> Dimmer
     
-    bulb.emissive.set(bulbEmissive);
-    bulb.emissiveIntensity = intensity;
-    bulb.opacity = 0.8;
-    
-    filament.color.set(filColor);
-    filament.emissive.set(filColor);
-    filament.emissiveIntensity = intensity * 2;
-    
-    if (!circuit.group.getObjectByName('bulbLight')) {
-        const light = new THREE.PointLight(bulbEmissive, 5 * intensity, 10);
-        light.name = 'bulbLight';
-        light.position.set(3, 2, 0); 
-        circuit.group.add(light);
-    }
+    const isParallel = circuit.bulbMode === 'parallel';
+    const intensity = isParallel ? 1.5 : 0.6; 
+    const bulbColor = isParallel ? 0xffff00 : 0xffaa00; 
+    const filColor = isParallel ? 0xffffff : 0xff8800;
+
+    circuit.bulbs.forEach((bulbGroup, idx) => {
+        const { bulb, filament } = bulbGroup.userData.materials;
+        
+        bulb.emissive.set(bulbColor);
+        bulb.emissiveIntensity = intensity;
+        bulb.opacity = 0.9;
+        
+        filament.color.set(filColor);
+        filament.emissive.set(filColor);
+        filament.emissiveIntensity = intensity * 2;
+        
+        const lightName = 'bulbLight_' + idx;
+        if (!circuit.group.getObjectByName(lightName)) {
+            const light = new THREE.PointLight(bulbColor, 3 * intensity, 8);
+            light.name = lightName;
+            light.position.copy(bulbGroup.position).add(new THREE.Vector3(0, 2, 0));
+            circuit.group.add(light);
+        }
+    });
 }
 
-function turnOffBulb(circuit) {
-    circuit.isBulbOn = false;
-    const { bulb, filament } = circuit.bulb.userData.materials;
+function turnOffBulbs(circuit) {
+    circuit.isBulbsOn = false;
     
-    bulb.emissive.set(0x000000);
-    bulb.opacity = 0.3;
-    
-    filament.color.set(0x555555);
-    filament.emissive.set(0x000000);
-    filament.emissiveIntensity = 0;
-    
-    const light = circuit.group.getObjectByName('bulbLight');
-    if (light) circuit.group.remove(light);
+    circuit.bulbs.forEach((bulbGroup, idx) => {
+        const { bulb, filament } = bulbGroup.userData.materials;
+        
+        bulb.emissive.set(0x000000);
+        bulb.opacity = 0.3;
+        
+        filament.color.set(0x555555);
+        filament.emissive.set(0x000000);
+        filament.emissiveIntensity = 0;
+        
+        const lightName = 'bulbLight_' + idx;
+        const light = circuit.group.getObjectByName(lightName);
+        if (light) circuit.group.remove(light);
+    });
 }
 
 document.getElementById('reset-btn').addEventListener('click', () => {
@@ -810,7 +830,7 @@ document.getElementById('reset-btn').addEventListener('click', () => {
         c.isSwitchClosed = false;
         c.switch.getObjectByName('lever').rotation.x = Math.PI / 3;
         c.box.userData.slots.forEach(s => s.occupied = false);
-        turnOffBulb(c);
+        turnOffBulbs(c);
     });
     
     allBatteries.forEach(b => {
@@ -821,15 +841,17 @@ document.getElementById('reset-btn').addEventListener('click', () => {
         // Reset position
         const id = b.userData.id;
         const battIndex = id % 10; 
+        const xOffset = battIndex === 1 ? -2 : 2;
         
-        if (id < 10) {
-            // Single
-            b.position.set(0, 0.5, 6.5);
-        } else {
-            // Double
-            const xOffset = battIndex === 1 ? -2 : 2;
-            b.position.set(xOffset, 0.5, 6.5);
-        }
+        // Determine if this battery belongs to parallel circuit (id start with 1) or series (id start with 0)
+        // Circuit IDs passed were 0 and 1. Battery IDs are id*10 + 1/2.
+        // Left Circuit (Series): id=0 -> Batt 1, 2
+        // Right Circuit (Parallel): id=1 -> Batt 11, 12
+        
+        const isParallel = id > 10;
+        const zPos = isParallel ? 9.5 : 6.5;
+        
+        b.position.set(xOffset, 0.5, zPos);
     });
     
     document.getElementById('success-msg').style.display = 'none';

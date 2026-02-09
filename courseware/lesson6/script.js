@@ -477,23 +477,129 @@ function initCircuit(offsetX, id, type = 'double') {
     // Batteries
     if (type === 'single') {
         const b1 = createBattery(id * 10 + 1);
-        b1.position.set(0, 0.5, 6.5); // Center
-        group.add(b1);
-        allBatteries.push(b1);
-        batteryList.push(b1);
-    } else {
-        const b1 = createBattery(id * 10 + 1);
-        b1.position.set(-2, 0.5, 6.5);
-        group.add(b1);
-        allBatteries.push(b1);
-        batteryList.push(b1);
+        
+        // --- Pre-install battery in slot ---
+        const slot = box.userData.slots[0];
+        const slotWorldPos = slot.pos.clone().applyMatrix4(box.matrixWorld);
+        
+        // Slot pos is (0, 0.6, 0) relative to box.
+        // Box is at (-3, 0, 0) relative to group.
+        // So battery should be at (-3, 0.6, 0) relative to group.
+        b1.position.set(-3, 0.6, 0); 
+        
+        // Set logic state
+        slot.occupied = true;
+        b1.userData.parentBox = box;
+        b1.userData.inSlot = slot;
 
-        const b2 = createBattery(id * 10 + 2);
-        b2.position.set(2, 0.5, 6.5);
-        group.add(b2);
-        allBatteries.push(b2);
-        batteryList.push(b2);
+        group.add(b1);
+        allBatteries.push(b1);
+        batteryList.push(b1);
+    } 
+
+    // Add Analogy Models for Right Circuit
+    if (id === 0) { // Changed to 0 since we only have one circuit now
+        createElectronModel(group);
+        createWaterModel(group);
     }
+}
+
+function createElectronModel(group) {
+    const container = new THREE.Group();
+    container.position.set(8, 0, -4); // Moved closer to center since right circuit is gone
+    group.add(container);
+
+    // Label
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('电池 (电子堆)', 128, 48);
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+    label.position.set(0, 4.5, 0);
+    label.scale.set(4, 1, 1);
+    container.add(label);
+
+    // Big Battery Shell
+    const shellGeo = new THREE.CylinderGeometry(2, 2, 6, 32);
+    const shellMat = new THREE.MeshStandardMaterial({ 
+        color: 0x333333,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide
+    });
+    const shell = new THREE.Mesh(shellGeo, shellMat);
+    shell.position.y = 3;
+    container.add(shell);
+
+    // Electrons (Yellow particles)
+    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
+    const particleMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    
+    // Create a pile of electrons
+    for(let i=0; i<80; i++) {
+        const p = new THREE.Mesh(particleGeo, particleMat);
+        // Random position inside cylinder
+        const r = 1.8 * Math.sqrt(Math.random());
+        const theta = Math.random() * 2 * Math.PI;
+        const x = r * Math.cos(theta);
+        const z = r * Math.sin(theta);
+        const y = Math.random() * 5.5 + 0.2; // Height 0.2 to 5.7
+        
+        p.position.set(x, y, z);
+        container.add(p);
+    }
+}
+
+function createWaterModel(group) {
+    const container = new THREE.Group();
+    container.position.set(8, 0, 4); // Moved closer to center
+    group.add(container);
+// ... existing code ... Label
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('水箱 (水分子)', 128, 48);
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+    label.position.set(0, 4.5, 0);
+    label.scale.set(4, 1, 1);
+    container.add(label);
+
+    // Water Tank Shell
+    const tankGeo = new THREE.BoxGeometry(4, 6, 4);
+    const tankMat = new THREE.MeshPhysicalMaterial({ 
+        color: 0xaaccff,
+        transparent: true,
+        opacity: 0.3,
+        roughness: 0,
+        transmission: 0.8,
+        thickness: 0.5
+    });
+    const tank = new THREE.Mesh(tankGeo, tankMat);
+    tank.position.y = 3;
+    container.add(tank);
+
+    // Water Molecules (Blue particles)
+    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
+    const particleMat = new THREE.MeshBasicMaterial({ color: 0x0088ff });
+    
+    // Create a volume of water molecules
+    for(let i=0; i<150; i++) {
+        const p = new THREE.Mesh(particleGeo, particleMat);
+        const x = (Math.random() - 0.5) * 3.6;
+        const y = Math.random() * 5.6 + 0.2;
+        const z = (Math.random() - 0.5) * 3.6;
+        
+        p.position.set(x, y, z);
+        container.add(p);
+    }
+}
+
 
     // Wires (Relative to Group)
     function getPosInGroup(obj, localVec) {
@@ -544,13 +650,22 @@ function initCircuit(offsetX, id, type = 'double') {
         switch: sw,
         bulb: bulb,
         batteries: batteryList,
-        isSwitchClosed: false
+        isSwitchClosed: false,
+        electronParticles: [],
+        waterParticles: [],
+        isAnimating: false
     });
+
+    // Add Analogy Models
+    createElectronModel(group);
+    createWaterModel(group);
 }
 
-// Create Two Circuits
-initCircuit(-6, 0, 'single'); // Left Circuit (Single)
-initCircuit(6, 1, 'double');  // Right Circuit (Double)
+function createElectronModel(group) {
+    const container = new THREE.Group();
+    container.position.set(8, 0, -4); // Moved closer to center
+    group.add(container);
+    // ... existing code ...
 
 
 // --- Interaction ---
