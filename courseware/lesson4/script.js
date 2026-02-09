@@ -61,7 +61,13 @@ const wireMat = new THREE.MeshStandardMaterial({
 function updateWireMesh(startPos, endPos) {
     const mid = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
     const dist = startPos.distanceTo(endPos);
-    mid.y += 0.5 + dist * 0.1; // Lower arc since it's pre-connected
+    
+    // Flatten the wire to look like it's on a table
+    // Less arc height
+    mid.y = 0.5; 
+    
+    // Add some randomness or outward bend if it's too straight?
+    // Let's just keep it simple but low profile.
     
     const curve = new THREE.QuadraticBezierCurve3(startPos, mid, endPos);
     const geometry = new THREE.TubeGeometry(curve, 20, 0.08, 8, false);
@@ -255,29 +261,42 @@ function createBulb() {
     const group = new THREE.Group();
     group.name = 'bulb';
     
+    // Glass
     bulbMaterial = new THREE.MeshPhysicalMaterial({ 
         color: 0xffffff, 
         transparent: true, 
         opacity: 0.3, 
         transmission: 0.9,
+        roughness: 0,
         emissive: 0x000000
     });
     const glass = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), bulbMaterial);
     glass.position.y = 1.8;
     group.add(glass);
 
+    // Filament
     filamentMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x555555, 
         emissive: 0x000000
     });
     
-    // Simplified Filament
-    const filament = new THREE.Mesh(
-        new THREE.TorusGeometry(0.3, 0.02, 8, 20, Math.PI), 
-        filamentMaterial
-    );
-    filament.position.y = 1.8;
-    filament.rotation.z = Math.PI;
+    const supportGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8);
+    const supportMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+    const s1 = new THREE.Mesh(supportGeo, supportMat);
+    s1.position.set(-0.2, 1.4, 0);
+    group.add(s1);
+    const s2 = new THREE.Mesh(supportGeo, supportMat);
+    s2.position.set(0.2, 1.4, 0);
+    group.add(s2);
+
+    const filamentPath = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.2, 1.8, 0),
+        new THREE.Vector3(-0.1, 2.0, 0),
+        new THREE.Vector3(0, 1.8, 0),
+        new THREE.Vector3(0.1, 2.0, 0),
+        new THREE.Vector3(0.2, 1.8, 0)
+    ]);
+    const filament = new THREE.Mesh(new THREE.TubeGeometry(filamentPath, 20, 0.015, 8, false), filamentMaterial);
     group.add(filament);
 
     // Base
@@ -339,7 +358,7 @@ function createSwitch() {
 
 // Battery Box
 batteryBox = createBatteryBox();
-batteryBox.position.set(-4, 0, 0);
+batteryBox.position.set(-3.5, 0, 0);
 scene.add(batteryBox);
 
 // Batteries (Outside initially)
@@ -355,35 +374,65 @@ scene.add(battery2);
 
 // Bulb
 bulb = createBulb();
-bulb.position.set(4, 0, 0);
+bulb.position.set(3.5, 0, 0);
 scene.add(bulb);
 
 // Switch
 switchObj = createSwitch();
-switchObj.position.set(0, 0, -2);
+switchObj.position.set(0, 0, 3);
 switchObj.rotation.y = Math.PI / 2;
 scene.add(switchObj);
 
 // --- Pre-wiring ---
 // Path: Box(+) -> Switch -> Bulb -> Box(-)
 function createWires() {
-    // Box(+) to Switch(Rear)
+    // Box(+) [Left] to Switch [Front] (Rear Terminal is Right side in world?)
+    // Box(+) is at x = -4.8, z = -1
+    // Switch is at x = 0, z = 3. Rotated 90 deg.
+    // Switch Terminals: Rear (1.2, 0.2, 3), Front (-1.2, 0.2, 3) relative to origin? No.
+    // Switch Local: Front(0, 0.2, -1.2), Rear(0, 0.2, 1.2)
+    // Switch World (Rotated 90 Y, Pos 0,0,3):
+    // Local X+ -> World Z-
+    // Local Z+ -> World X+
+    // Front -> World X += -1.2 (from Z -1.2) ?? 
+    // Wait. Rot Y 90: (x,y,z) -> (z, y, -x)
+    // Front(0, 0.2, -1.2) -> (-1.2, 0.2, 0) + (0,0,3) = (-1.2, 0.2, 3)
+    // Rear(0, 0.2, 1.2) -> (1.2, 0.2, 0) + (0,0,3) = (1.2, 0.2, 3)
+    
+    // So Switch Terminals are at x = -1.2 and x = 1.2, z = 3.
+    
+    // Wire 1: Box(+) [-5.3, 0.5, -1] -> Switch Left [-1.2, 0.2, 3]
     const boxPos = batteryBox.localToWorld(batteryBox.userData.terminals.pos.clone());
-    const switchIn = switchObj.localToWorld(switchObj.userData.terminals.rear.clone());
+    const switchIn = switchObj.localToWorld(switchObj.userData.terminals.front.clone()); // Use Left terminal
+    
+    // Manually adjust mid point for better path (avoid crossing center)
+    // Go along Left side
     const w1 = updateWireMesh(boxPos, switchIn);
+    // Custom mid for w1: x = -4, z = 3 ?
+    // Let's rely on default for now, or update updateWireMesh to accept control point
     scene.add(w1);
     wires.push(w1);
 
-    // Switch(Front) to Bulb(T1)
-    const switchOut = switchObj.localToWorld(switchObj.userData.terminals.front.clone());
-    const bulbIn = bulb.localToWorld(bulb.userData.terminals.t1.clone());
+    // Wire 2: Switch Right [1.2, 0.2, 3] -> Bulb Left [2.9, 0.5, 0]
+    // Bulb at 3.5, 0, 0. Terminals +/- 0.4 x. 
+    // T1 (0.4) -> 3.9, T2 (-0.4) -> 3.1
+    // Let's connect Switch Right to Bulb Left (T2)
+    const switchOut = switchObj.localToWorld(switchObj.userData.terminals.rear.clone());
+    const bulbIn = bulb.localToWorld(bulb.userData.terminals.t2.clone());
     const w2 = updateWireMesh(switchOut, bulbIn);
     scene.add(w2);
     wires.push(w2);
 
-    // Bulb(T2) to Box(-)
-    const bulbOut = bulb.localToWorld(bulb.userData.terminals.t2.clone());
+    // Wire 3: Bulb Right [3.9, 0.5, 0] -> Box(-) [-5.3, 0.5, 1]
+    // This is the long return wire.
+    // Should go behind or in front?
+    // Box(-) is at z=1. Bulb is at z=0.
+    // Path: Bulb -> Box. 
+    const bulbOut = bulb.localToWorld(bulb.userData.terminals.t1.clone());
     const boxNeg = batteryBox.localToWorld(batteryBox.userData.terminals.neg.clone());
+    
+    // To make this look better, we really need a multi-segment wire or specific control points.
+    // For now, simple curve.
     const w3 = updateWireMesh(bulbOut, boxNeg);
     scene.add(w3);
     wires.push(w3);
