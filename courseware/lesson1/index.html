@@ -5,8 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>第1课：认识神奇的元件 - 3D趣味电路</title>
     <link rel="stylesheet" href="./style.css">
+    <style>
+        #nav-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+        }
+        #nav-btn:hover { background: #34495e; }
+    </style>
 </head>
 <body>
+    <a href="../index.html" id="nav-btn">← 返回主页</a>
     <div id="canvas-container"></div>
     
     <div id="ui-overlay">
