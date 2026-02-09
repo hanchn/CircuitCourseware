@@ -53,21 +53,28 @@
 - **物理引擎/状态管理**: Zustand (用于管理电路连接状态)
 - **UI 组件库**: Tailwind CSS / Ant Design (用于控制面板)
 
-## 🚀 快速开始 (开发中)
+## 🚀 快速开始
+
+本项目无需安装复杂的依赖，基于原生 ES Modules 和 Vite 运行。
+
+### 1. 启动项目
+
+在项目根目录下，使用终端运行以下命令启动预览服务器：
 
 ```bash
-# 克隆项目
-git clone https://github.com/your-username/circuit-fun-3d.git
-
-# 进入目录
-cd circuit-fun-3d
-
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm run dev
+npx vite
 ```
+
+### 2. 访问课程
+
+命令运行成功后，终端会显示本地访问地址（通常是 `http://localhost:5173/`）。
+按住 `Cmd + 点击` (Mac) 或 `Ctrl + 点击` (Windows) 链接，或直接在浏览器中输入地址即可开始体验。
+
+*   **首页**: 课程导航列表
+*   **第1课**: 认识元件
+*   **第2课**: 点亮灯泡
+*   **第3课**: 带开关的电路
+*   **第4课**: 串联电池与电池盒
 
 ## 🗓 开发计划 Roadmap
 - [x] 确定项目大纲与需求
