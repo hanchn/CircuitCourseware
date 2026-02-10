@@ -497,110 +497,6 @@ function initCircuit(offsetX, id, type = 'double') {
         batteryList.push(b1);
     } 
 
-    // Add Analogy Models for Right Circuit
-    if (id === 0) { // Changed to 0 since we only have one circuit now
-        createElectronModel(group);
-        createWaterModel(group);
-    }
-}
-
-function createElectronModel(group) {
-    const container = new THREE.Group();
-    container.position.set(8, 0, -4); // Moved closer to center since right circuit is gone
-    group.add(container);
-
-    // Label
-    const canvas = document.createElement('canvas');
-    canvas.width = 256; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 40px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('电池 (电子堆)', 128, 48);
-    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
-    label.position.set(0, 4.5, 0);
-    label.scale.set(4, 1, 1);
-    container.add(label);
-
-    // Big Battery Shell
-    const shellGeo = new THREE.CylinderGeometry(2, 2, 6, 32);
-    const shellMat = new THREE.MeshStandardMaterial({ 
-        color: 0x333333,
-        transparent: true,
-        opacity: 0.3,
-        side: THREE.DoubleSide
-    });
-    const shell = new THREE.Mesh(shellGeo, shellMat);
-    shell.position.y = 3;
-    container.add(shell);
-
-    // Electrons (Yellow particles)
-    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
-    const particleMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-    
-    // Create a pile of electrons
-    for(let i=0; i<80; i++) {
-        const p = new THREE.Mesh(particleGeo, particleMat);
-        // Random position inside cylinder
-        const r = 1.8 * Math.sqrt(Math.random());
-        const theta = Math.random() * 2 * Math.PI;
-        const x = r * Math.cos(theta);
-        const z = r * Math.sin(theta);
-        const y = Math.random() * 5.5 + 0.2; // Height 0.2 to 5.7
-        
-        p.position.set(x, y, z);
-        container.add(p);
-    }
-}
-
-function createWaterModel(group) {
-    const container = new THREE.Group();
-    container.position.set(8, 0, 4); // Moved closer to center
-    group.add(container);
-// ... existing code ... Label
-    const canvas = document.createElement('canvas');
-    canvas.width = 256; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 40px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('水箱 (水分子)', 128, 48);
-    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
-    label.position.set(0, 4.5, 0);
-    label.scale.set(4, 1, 1);
-    container.add(label);
-
-    // Water Tank Shell
-    const tankGeo = new THREE.BoxGeometry(4, 6, 4);
-    const tankMat = new THREE.MeshPhysicalMaterial({ 
-        color: 0xaaccff,
-        transparent: true,
-        opacity: 0.3,
-        roughness: 0,
-        transmission: 0.8,
-        thickness: 0.5
-    });
-    const tank = new THREE.Mesh(tankGeo, tankMat);
-    tank.position.y = 3;
-    container.add(tank);
-
-    // Water Molecules (Blue particles)
-    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
-    const particleMat = new THREE.MeshBasicMaterial({ color: 0x0088ff });
-    
-    // Create a volume of water molecules
-    for(let i=0; i<150; i++) {
-        const p = new THREE.Mesh(particleGeo, particleMat);
-        const x = (Math.random() - 0.5) * 3.6;
-        const y = Math.random() * 5.6 + 0.2;
-        const z = (Math.random() - 0.5) * 3.6;
-        
-        p.position.set(x, y, z);
-        container.add(p);
-    }
-}
-
-
     // Wires (Relative to Group)
     function getPosInGroup(obj, localVec) {
         const v = localVec.clone();
@@ -663,9 +559,195 @@ function createWaterModel(group) {
 
 function createElectronModel(group) {
     const container = new THREE.Group();
-    container.position.set(8, 0, -4); // Moved closer to center
+    container.position.set(8, 0, -4); // Moved closer to center since right circuit is gone
     group.add(container);
-    // ... existing code ...
+
+    // Label
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('电池 (电子堆)', 128, 48);
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+    label.position.set(0, 4.5, 0);
+    label.scale.set(4, 1, 1);
+    container.add(label);
+
+    // Big Battery Shell
+    // Cap (Positive)
+    const capGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.5, 32);
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 });
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.y = 6.25;
+    container.add(cap);
+
+    // Body (Cylinder)
+    const shellGeo = new THREE.CylinderGeometry(2, 2, 6, 32, 1, true);
+    const shellMat = new THREE.MeshStandardMaterial({ 
+        color: 0x333333,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide
+    });
+    const shell = new THREE.Mesh(shellGeo, shellMat);
+    shell.position.y = 3;
+    container.add(shell);
+
+    // Bottom (Negative)
+    const bottomGeo = new THREE.CylinderGeometry(2, 2, 0.2, 32);
+    const bottom = new THREE.Mesh(bottomGeo, capMat);
+    bottom.position.y = -0.1;
+    container.add(bottom);
+
+    // Label on Battery
+    const battLabelGeo = new THREE.CylinderGeometry(2.05, 2.05, 4, 32, 1, true);
+    const battLabelMat = new THREE.MeshStandardMaterial({ 
+        color: 0xffcc00, 
+        transparent: true, 
+        opacity: 0.2,
+        side: THREE.DoubleSide 
+    });
+    const battLabel = new THREE.Mesh(battLabelGeo, battLabelMat);
+    battLabel.position.y = 3;
+    container.add(battLabel);
+
+
+    // Electrons (Yellow particles)
+    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
+    const particleMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    
+    // Create a pile of electrons
+    for(let i=0; i<80; i++) {
+        const p = new THREE.Mesh(particleGeo, particleMat);
+        // Random position inside cylinder
+        const r = 1.8 * Math.sqrt(Math.random());
+        const theta = Math.random() * 2 * Math.PI;
+        const x = r * Math.cos(theta);
+        const z = r * Math.sin(theta);
+        const y = Math.random() * 5.5 + 0.2; // Height 0.2 to 5.7
+        
+        p.position.set(x, y, z);
+        container.add(p);
+    }
+}
+
+function createWaterModel(group) {
+    const container = new THREE.Group();
+    container.position.set(8, 0, 4); // Moved closer to center
+    group.add(container);
+
+    // Label
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('水箱 (水分子)', 128, 48);
+    // Sprite always faces camera, so no manual rotation needed for Sprite itself usually,
+    // BUT if we put it inside a rotated container, it might get offset if not centered.
+    // Actually Sprites always face screen. But let's check.
+    // If container is rotated, the sprite's position rotates with it.
+    // The sprite's "face" orientation is usually handled by Three.js to face camera.
+    // However, if we want it to look "backwards" relative to container, we might not need to do anything if it's a sprite.
+    // Wait, if I rotate container 180, the label (0, 4.5, 0) stays at (0, 4.5, 0).
+    // So the label position is fine.
+    
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+    label.position.set(0, 4.5, 0);
+    label.scale.set(4, 1, 1);
+    container.add(label);
+
+    container.rotation.y = Math.PI; // Rotate entire water tank 180 degrees
+
+
+    // Water Tank Structure (Open Top)
+    // Glass Panels
+    const glassMat = new THREE.MeshPhysicalMaterial({ 
+        color: 0xaaccff,
+        transparent: true,
+        opacity: 0.3,
+        roughness: 0.1,
+        transmission: 0.9,
+        thickness: 0.1,
+        side: THREE.DoubleSide
+    });
+
+    const w = 4;
+    const h = 5;
+    const d = 4;
+    
+    // Bottom
+    const bottom = new THREE.Mesh(new THREE.BoxGeometry(w, 0.2, d), glassMat);
+    bottom.position.y = 0.1;
+    container.add(bottom);
+    
+    // Front
+    const front = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.2), glassMat);
+    front.position.set(0, h/2, d/2 - 0.1);
+    container.add(front);
+
+    // Back
+    const back = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.2), glassMat);
+    back.position.set(0, h/2, -d/2 + 0.1);
+    container.add(back);
+
+    // Left
+    const left = new THREE.Mesh(new THREE.BoxGeometry(0.2, h, d), glassMat);
+    left.position.set(-w/2 + 0.1, h/2, 0);
+    container.add(left);
+
+    // Right
+    const right = new THREE.Mesh(new THREE.BoxGeometry(0.2, h, d), glassMat);
+    right.position.set(w/2 - 0.1, h/2, 0);
+    container.add(right);
+
+    // Water Surface (Animated if possible, static for now)
+    const waterGeo = new THREE.BoxGeometry(w-0.4, h-1, d-0.4);
+    const waterMat = new THREE.MeshPhongMaterial({ 
+        color: 0x0088ff, 
+        transparent: true, 
+        opacity: 0.4,
+        shininess: 100
+    });
+    const waterVol = new THREE.Mesh(waterGeo, waterMat);
+    waterVol.position.y = (h-1)/2 + 0.2;
+    container.add(waterVol);
+
+    // Pipe / Spout (Faucet)
+    const pipeGeo = new THREE.CylinderGeometry(0.3, 0.3, 2);
+    const pipeMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+    const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+    pipe.rotation.z = Math.PI / 2;
+    pipe.position.set(-2.5, 1, 0); // Stick out left
+    container.add(pipe);
+    
+    // Valve Handle
+    const valve = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.2, 8), new THREE.MeshStandardMaterial({color: 0xff0000}));
+    valve.rotation.x = Math.PI / 2;
+    valve.position.set(-2.5, 1.5, 0);
+    container.add(valve);
+
+    // Water Molecules (Blue particles)
+    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
+    const particleMat = new THREE.MeshBasicMaterial({ color: 0x0088ff });
+    
+    // Create a volume of water molecules
+    for(let i=0; i<150; i++) {
+        const p = new THREE.Mesh(particleGeo, particleMat);
+        const x = (Math.random() - 0.5) * 3.6;
+        const y = Math.random() * 5.6 + 0.2;
+        const z = (Math.random() - 0.5) * 3.6;
+        
+        p.position.set(x, y, z);
+        container.add(p);
+    }
+}
+
+// Create One Circuit
+initCircuit(-2, 0, 'single'); // Center Circuit (Single)
 
 
 // --- Interaction ---
@@ -939,9 +1021,23 @@ document.getElementById('reset-btn').addEventListener('click', () => {
         
         if (id < 10) {
             // Single
-            b.position.set(0, 0.5, 6.5);
+            // Reset to slot if it was originally there? 
+            // For Lesson 6, we want it to reset TO THE SLOT since it starts there.
+            // Slot pos: (-3, 0.6, 0) relative to group. Group is at (-2, 0, 0).
+            // So world pos is (-5, 0.6, 0).
+            // But we set position relative to parent (scene usually, or group if added to group).
+            // Wait, b is added to group in initCircuit.
+            b.position.set(-3, 0.6, 0);
+            
+            // Restore logic state
+            const circuit = circuits[0];
+            const slot = circuit.box.userData.slots[0];
+            slot.occupied = true;
+            b.userData.parentBox = circuit.box;
+            b.userData.inSlot = slot;
+            
         } else {
-            // Double
+            // Double (unused in this lesson but kept for safety)
             const xOffset = battIndex === 1 ? -2 : 2;
             b.position.set(xOffset, 0.5, 6.5);
         }
